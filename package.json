@@ -1,0 +1,39 @@
+{
+  "name": "transkribus-exist",
+  "version": "0.1.0",
+  "description": "Transkribus Client for eXist-DB",
+  "homepage": "https://github.com/dariok/transkribus-exist#readme",
+  "bugs": "https://github.com/dariok/transkribus-exist/issues",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "keywords": [
+    "exist",
+    "exist-db",
+    "xml",
+    "xql",
+    "xquery"
+  ],
+  "author": {
+    "name": "Dario Kampkaspar",
+    "email": "dario.kampkaspar@tu-darmstadt.de"
+  },
+  "license": "MIT",
+  "scripts": {
+    "test": "mocha test/mocha/ --recursive --exit && mocha test/xqs/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dariok/transkribus-exist",
+    "license": "MIT"
+  },
+  "devDependencies": {
+    "chai": "^4.3.6",
+    "chai-xml": "^0.4.0",
+    "fs-extra": "^10.0.0",
+    "mocha": "^10.0.0",
+    "supertest": "^6.1.4",
+    "xmldoc": "^1.1.2",
+    "yeoman-assert": "^3.1.1"
+  }
+}

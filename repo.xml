@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta 
+  xmlns="http://exist-db.org/xquery/repo">
+  <description>Transkribus Client for eXist-DB</description>
+  <author>Dario Kampkaspar</author>
+  <website>https://www.ulb.tu-darmstadt.de/die_bibliothek/einrichtungen/zeid/index.en.jsp</website>
+  <status>alpha</status>
+  <license>MIT</license>
+  <copyright>true</copyright>
+  <type>library</type>
+  <prepare>pre-install.xq</prepare>
+  <finish>post-install.xq</finish>
+</meta>

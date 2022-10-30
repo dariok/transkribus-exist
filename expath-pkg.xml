@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package 
+  xmlns="http://expath.org/ns/pkg" name="http://exist-db.org//trp-exist"
+  abbrev="trp-exist" version="0.1.0" spec="1.0">
+  <title>Transkribus Client for eXist-DB</title>
+  <dependency processor="http://exist-db.org" semver-min="5.3.0"/>
+</package>
