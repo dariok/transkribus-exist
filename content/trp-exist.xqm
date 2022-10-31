@@ -16,10 +16,9 @@ declare variable $trp:rest := "https://transkribus.eu/TrpServer/rest";
  : @param $pass (xs:string) The password
  : @return (element()) Transkribus’ login info
  :)
-declare function trp:login ( $user as xs:string, $pass as xs:string ) as element()+ {
+declare function trp:login ( $user as xs:string, $pass as xs:string ) as element() {
   let $response := try {
     hc:send-request(<hc:request
-        override-media-type="application/octet-stream"
         method="POST"
         href="{$trp:rest}/auth/login">
           <hc:body  media-type="application/x-www-form-urlencoded" method="text">{
@@ -30,7 +29,7 @@ declare function trp:login ( $user as xs:string, $pass as xs:string ) as element
     <trp:error>{$err:code || ": " || $err:description}</trp:error>
   }
 
-  return if ( $response instance of element() )
-    then $response
-    else <trp:response>{util:base64-decode($response[2])}</trp:response>
+  return if ( count($response) eq 2 )
+    then $response[2]/*
+    else $response
 };
