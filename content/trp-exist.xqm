@@ -82,21 +82,41 @@ declare function trp:trigger-export ( $login as element(), $collection as xs:int
   return (trp:post($login, $url, $body))[2]
 };
 
+(:~
+ : get the status of a job
+ : @param $login (element()) Transkribus login data
+ : @param $jobId (xs:int) the ID of the job to check
+ : @return (xs:string) the status
+ :)
+ declare function trp:get-job-status ( $login as element(trpUserLogin), $jobId as xs:int )  {
+  trp:get-json($login, 'jobs/' || $jobId)
+ };
+
 declare %private function trp:get ( $login as element(), $restPart as xs:string ) as item()* {
-  trp:connect($login//sessionId, "GET", $restPart, ())
+  trp:connect($login//sessionId, "GET", $restPart, (), '')
+};
+
+declare %private function trp:get-json ( $login as element(), $restPart as xs:string ) as map(*) {
+  parse-json((trp:connect($login//sessionId, "GET", $restPart, (), 'text/plain'))[2])
 };
 
 declare %private function trp:post ( $login as element(), $restPart as xs:string, $body as element(hc:body) ) as item()* {
-  trp:connect($login//sessionId, "POST", $restPart, $body)
+  trp:connect($login//sessionId, "POST", $restPart, $body, '')
 };
 
-declare %private function trp:connect ( $sessionID as xs:string, $method as xs:string, $restPart as xs:string, $body as element(hc:body)? ) as item()* {
+declare %private function trp:connect ( $sessionID as xs:string, $method as xs:string, $restPart as xs:string, $body as element(hc:body)?, $overrideType as xs:string? ) as item()* {
   try {
     hc:send-request(
       <hc:request method="{$method}" href="{$trp:rest}/{$restPart}">
+        {
+          if ( exists($overrideType) )
+            then attribute override-media-type { $overrideType }
+            else ()
+        }
         <hc:header name="JSESSIONID" value="{$sessionID}; Expires=null; Domain=transkribus.eu; Path=/TrpServer; Secure; HttpOnly" />
           { $body }
-      </hc:request>)
+      </hc:request>
+    )
   } catch * {
     <trp:error>{$err:code || ': '  || $err:description}</trp:error>
   }
