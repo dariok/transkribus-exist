@@ -57,6 +57,31 @@ declare function trp:list-collection-contents ( $login as element(), $collection
     else error($response)
 };
 
+(:~
+ : trigger the export of a document
+ : @param $login (element()) the Transkribus login info
+ : @param $collection (xs:int) the collection ID
+ : @param $docId (xs:int) the document ID
+ :)
+declare function trp:trigger-export ( $login as element(), $collection as xs:int, $docId as xs:int ) as xs:int {
+  (: get document metadate and extract page count :)
+  let $pagesRequest := '/collections/' || $collection || '/' || $docId || '/fulldoc.xml'
+    , $metadata := trp:get($login, $pagesRequest)
+    , $numberOfPages := $metadata//pageList/pages => count()
+
+  let $url := 'collections/' || $collection || '/' || $docId || '/export'
+    , $requestJson := '{
+        "commonPars": {
+          "pages": "1-' || $numberOfPages || '"
+        }
+      }'
+    , $body := <hc:body media-type="application/json" method="text">{
+        $requestJson
+      }</hc:body>
+
+  return (trp:post($login, $url, $body))[2]
+};
+
 declare %private function trp:get ( $login as element(), $restPart as xs:string ) as item()* {
   trp:connect($login//sessionId, "GET", $restPart, ())
 };
