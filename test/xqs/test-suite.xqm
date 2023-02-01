@@ -7,7 +7,7 @@ xquery version "3.1";
  : @see https://www.ulb.tu-darmstadt.de/die_bibliothek/einrichtungen/zeid/index.en.jsp
  :)
 
-module namespace tests = "http://exist-db.org//trp-exist/tests";
+module namespace tests = "http://exist-db.org/lib/tr-exist/tests";
 
 declare namespace test="http://exist-db.org/xquery/xqsuite";
 

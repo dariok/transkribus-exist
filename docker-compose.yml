@@ -1,0 +1,11 @@
+version: '3.7'
+
+services:
+  wdbplus:
+    build: .
+    container_name: trp-exist
+    hostname: trp-exist
+    ports:
+      - 8080:8080
+      - 8443:8443
+    mem_limit: 2G
