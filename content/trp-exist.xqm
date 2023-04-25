@@ -82,6 +82,18 @@ declare function trp:trigger-export ( $login as element(), $collection as xs:int
   return (trp:post($login, $url, $body))[2]
 };
 
+(: ~
+ : get the full set of metadata for a document
+ : @param $login (element()) Transkribus login data
+ : @param $collection (xs:int) the collection ID
+ : @param $docId (xs:int) the document ID
+ : @return (map(*)) document metadata
+ :)
+declare function trp:get-document-metadata ( $login as element(trpUserLogin), $collection as xs:int, $docId as xs:int ) as map(*) {
+  let $url := ("collections", $collection, $docId, "fulldoc") => string-join('/')
+  return trp:get-json($login, $url)
+};
+
 (:~
  : get the status of a job
  : @param $login (element()) Transkribus login data
