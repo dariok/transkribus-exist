@@ -16,7 +16,7 @@ declare variable $trp:rest := 'https://transkribus.eu/TrpServer/rest';
  : @param $pass (xs:string) The password
  : @return (element()) Transkribus’ login info
  :)
-declare function trp:login ( $user as xs:string, $pass as xs:string ) as element() {
+declare function trp:login ( $user as xs:string, $pass as xs:string ) as item() {
   let $response := try {
     hc:send-request(<hc:request
         method="POST"
