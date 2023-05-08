@@ -45,7 +45,8 @@ function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $c
       <body>
         <h1>{$collectionId} – {$docId}</h1>
           <div>
-            <h2>{$page/@file => string()}</h2>
+            <h2>{ string($page/@file) }</h2>
+            <p>Page { string($page/@current) } of { string($page/@max) }</p>
             <table>
               <tr>
                 <th>Line ID</th>
@@ -59,18 +60,38 @@ function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $c
                       {
                         if ( $line/l2 ) then
                           <table>
-                              <tr class="lineip">
-                                <td>{ string($line/l1/@status) }</td>
+                            <tr>
+                              <td>{ string($line/l1/@status) }</td>
                                 {
-                                  for $w in $line/l1//word return <td>{$w}</td>
+                                  for $w in $line/l1//word return
+                                    <td>
+                                      {
+                                        attribute class {
+                                          if ( $line/l2//word[@order = $w/@order] = $w )
+                                            then "linegt"
+                                            else "lineip"
+                                        },
+                                        $w
+                                      }
+                                    </td>
                                 }
-                              </tr>
-                              <tr class="linegt">
+                            </tr>
+                            <tr>
                                 <td>{ string($line/l2/@status) }</td>
                                 {
-                                  for $w in $line/l2//word return <td>{$w}</td>
+                                  for $w in $line/l2//word return
+                                    <td>
+                                      {
+                                        attribute class {
+                                          if ( $line/l1//word[@order = $w/@order] = $w )
+                                            then "linegt"
+                                            else "lineip"
+                                        },
+                                        $w
+                                      }
+                                    </td>
                                 }
-                              </tr>
+                            </tr>
                           </table>
                         else (
                           attribute class { 'lineok' },
@@ -108,20 +129,22 @@ declare function trp-utils:compare-last-text-versions ( $login as element(), $co
 
 declare function trp-utils:compare-last-text-versions ( $login as element(), $collection as xs:int, $docId as xs:int, $page as xs:int ) {
   let $md := trp:get-document-metadata($login, $collection, $docId)
-    , $page := $md?pageList?pages($page)
-    , $transcripts :=
-        (
-          $page?tsList?transcripts(1),
-          $page?tsList?transcripts(2)
-        )
+    , $pages := $md?pageList?pages($page)
+    , $max := array:size($md?pageList?pages)
+    , $transcripts := map {
+        "page": $page,
+        "max":  $max,
+        "d1":   $pages?tsList?transcripts(1),
+        "d2":   $pages?tsList?transcripts(2)
+      }
   return trp-utils:compare($transcripts)
 };
 
-declare %private function trp-utils:compare ( $info as map()+ ) {
-  let $d1 := doc($info[1]?url)
-    , $d2 := doc($info[2]?url)
+declare %private function trp-utils:compare ( $info as map() ) {
+  let $d1 := doc($info?d1?url)
+    , $d2 := doc($info?d2?url)
 
-  return <page file="{$info[1]?fileName}">
+  return <page file="{$info[1]?fileName}" max="{ $info?max }" current="{ $info?page }">
     {
       for-each-pair($d1//*:TextLine, $d2//*:TextLine,
         function ( $a, $b ) {
