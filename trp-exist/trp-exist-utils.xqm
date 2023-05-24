@@ -48,7 +48,26 @@ function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $c
           <h1>{$collectionId} – {$docId}</h1>
             <div>
               <h2>{ string($page/@file) }</h2>
-              <p>Page { string($page/@current) } of { string($page/@max) }</p>
+              <p>
+                <a href="../1/latest?sessionId={ $sessionId }">1</a>
+                {
+                  if ( number($page/@current) gt 2 )
+                    then
+                      let $previousPage := number($page/@current) - 1
+                      return <a href="../{ $previousPage }/latest?sessionId={ $sessionId }">{ $previousPage }</a>
+                    else ()
+                }
+                [{ string($page/@current) } of { string($page/@max) }]
+                {
+                  if ( number($page/@current) lt number($page/@max) - 2 )
+                    then
+                      let $nextPage := number($page/@current) + 1
+                      return <a href="../{ $nextPage }/latest?sessionId={ $sessionId }">{ $nextPage }</a>
+                    else ()
+                }
+                >>
+                <a href="../{ string($page/@max) }/latest?sessionId={ $sessionId }">{ string($page/@max) }</a>
+                </p>
               <table>
                 <tr>
                   <th>Line ID</th>
