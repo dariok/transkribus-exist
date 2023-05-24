@@ -49,7 +49,7 @@ function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $c
             <div>
               <h2>{ string($page/@file) }</h2>
               <p>
-                <a href="../1/latest?sessionId={ $sessionId }">1</a>
+                <a href="../1/latest?sessionId={ $sessionId }">1</a> &lt;&lt;
                 {
                   if ( number($page/@current) gt 2 )
                     then
@@ -82,36 +82,36 @@ function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $c
                           if ( $line/l2 ) then
                             <table>
                               <tr>
-                                <td>{ string($line/l1/@status) }</td>
-                                  {
-                                    for $w in $line/l1//word return
-                                      <td>
-                                        {
-                                          attribute class {
-                                            if ( $line/l2//word[@order = $w/@order] = $w )
-                                              then "linegt"
-                                              else "lineip"
-                                          },
-                                          $w
-                                        }
-                                      </td>
-                                  }
+                                <td><b>{ string($line/l1/@status) }</b></td>
+                                {
+                                  for $w in $line/l1//word return
+                                    <td>
+                                      {
+                                        attribute class {
+                                          if ( $line/l2//word[@order = $w/@order] = $w )
+                                            then "linegt"
+                                            else "lineip"
+                                        },
+                                        $w
+                                      }
+                                    </td>
+                                }
                               </tr>
                               <tr>
-                                  <td>{ string($line/l2/@status) }</td>
-                                  {
-                                    for $w in $line/l2//word return
-                                      <td>
-                                        {
-                                          attribute class {
-                                            if ( $line/l1//word[@order = $w/@order] = $w )
-                                              then "linegt"
-                                              else "lineip"
-                                          },
-                                          $w
-                                        }
-                                      </td>
-                                  }
+                                <td><b>{ string($line/l2/@status) }</b></td>
+                                {
+                                  for $w in $line/l2//word return
+                                    <td>
+                                      {
+                                        attribute class {
+                                          if ( $line/l1//word[@order = $w/@order] = $w )
+                                            then "linegt"
+                                            else "lineip"
+                                        },
+                                        $w
+                                      }
+                                    </td>
+                                }
                               </tr>
                             </table>
                           else (
@@ -209,20 +209,20 @@ declare %private function trp-utils:compare ( $info as map() ) {
             <line id="{$a/@id}">{ $a/*:TextEquiv/*:Unicode/text() }</line>
           else
             <line id="{$a/@id}">
-              <l1 status="{$info[1]?status}">
+              <l1 status="{$info?d1?status}">
                 <text>{$a/*:TextEquiv/*:Unicode/text()}</text>
                 <words>{
-                  for $word in $a//*:Word return
-                    <word id="{$word/@id}" order="{$word/@custom => substring(21) => substring-before(';')}">
-                      { $word//*:Unicode/text() }
+                  for $word at $pos in tokenize($a/*:TextEquiv/*:Unicode/text(), ' ') return
+                    <word order="{ $pos }">
+                      { $word }
                     </word>
                 }</words></l1>
-              <l2 status="{$info[2]?status}">
+              <l2 status="{$info?d2?status}">
                 <text>{$b/*:TextEquiv/*:Unicode/text()}</text>
                 <words>{
-                  for $word in $b//*:Word return
-                    <word id="{$word/@id}" order="{$word/@custom => substring(21) => substring-before(';')}">
-                      { $word//*:Unicode/text() }
+                  for $word at $pos in tokenize($b/*:TextEquiv/*:Unicode/text(), ' ') return
+                    <word order="{ $pos }">
+                      { $word }
                     </word>
                 }</words>
               </l2>
