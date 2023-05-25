@@ -92,6 +92,9 @@ function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $c
                                             then "linegt"
                                             else "lineip"
                                         },
+                                        if ( $line/l2//word[@order = $w/@order] != $w )
+                                          then attribute title { $w => string-to-codepoints() => string-join('-') }
+                                          else (),
                                         $w
                                       }
                                     </td>
@@ -108,6 +111,9 @@ function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $c
                                             then "linegt"
                                             else "lineip"
                                         },
+                                        if ( $line/l1//word[@order = $w/@order] != $w )
+                                          then attribute title { $w => string-to-codepoints() => string-join('-') }
+                                          else (),
                                         $w
                                       }
                                     </td>
