@@ -19,6 +19,21 @@ function trp-utils:login ( $user as xs:string*, $pass as xs:string* ) as item() 
 
 declare
   %rest:GET
+  %rest:path("/trpex/compare/{$collectionId}/{$docId}/{$page}/latest.xml")
+  %rest:query-param("sessionId", "{$sessionId}", "")
+function trp-utils:compare-latest-xml ( $sessionId as xs:string*, $collectionId as xs:int*, $docId as xs:int*, $page as xs:int* ) as element() {
+  trp-utils:compare-last-text-versions (
+      <trpUserLogin>
+        <sessionId>{$sessionId}</sessionId>
+      </trpUserLogin>,
+      $collectionId,
+      $docId,
+      $page
+    )
+};
+
+declare
+  %rest:GET
   %rest:path("/trpex/compare/{$collectionId}/{$docId}/{$page}/latest")
   %rest:query-param("sessionId", "{$sessionId}", "")
   %output:method("html")
