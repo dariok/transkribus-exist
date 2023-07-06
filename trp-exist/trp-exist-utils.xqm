@@ -74,7 +74,7 @@ function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $c
                 }
                 [{ string($page/@current) } of { string($page/@max) }]
                 {
-                  if ( number($page/@current) lt number($page/@max) - 2 )
+                  if ( number($page/@current) lt number($page/@max) )
                     then
                       let $nextPage := number($page/@current) + 1
                       return <a href="../{ $nextPage }/latest?sessionId={ $sessionId }">{ $nextPage }</a>
@@ -97,7 +97,11 @@ function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $c
                           if ( $line/l2 ) then
                             <table>
                               <tr>
-                                <td><b>{ string($line/l1/@status) }</b></td>
+                                <td>
+                                  <b title="{ string-join($line/l1/@*[not(name() = 'id')], ' – ') }">
+                                    { xs:int(number($line/l1/@id)) }
+                                  </b>
+                                </td>
                                 {
                                   for $w in $line/l1//word return
                                     <td>
@@ -108,7 +112,7 @@ function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $c
                                             else "lineip"
                                         },
                                         if ( $line/l2//word[@order = $w/@order] != $w )
-                                          then attribute title { $w => string-to-codepoints() => string-join('-') }
+                                          then attribute title { ($w => string-to-codepoints()) ! trp-utils:dec-to-hex(.) => string-join('-') }
                                           else (),
                                         $w
                                       }
@@ -116,7 +120,11 @@ function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $c
                                 }
                               </tr>
                               <tr>
-                                <td><b>{ string($line/l2/@status) }</b></td>
+                                <td>
+                                  <b title="{ string-join($line/l2/@*[not(name() = 'id')], ' – ') }">
+                                    { xs:int(number($line/l2/@id)) }
+                                  </b>
+                                </td>
                                 {
                                   for $w in $line/l2//word return
                                     <td>
@@ -127,7 +135,7 @@ function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $c
                                             else "lineip"
                                         },
                                         if ( $line/l1//word[@order = $w/@order] != $w )
-                                          then attribute title { $w => string-to-codepoints() => string-join('-') }
+                                          then attribute title { ($w => string-to-codepoints()) ! trp-utils:dec-to-hex(.) => string-join('-') }
                                           else (),
                                         $w
                                       }
@@ -230,7 +238,7 @@ declare %private function trp-utils:compare ( $info as map() ) {
             <line id="{$a/@id}">{ $a/*:TextEquiv/*:Unicode/text() }</line>
           else
             <line id="{$a/@id}">
-              <l1 status="{$info?d1?status}">
+              <l1 status="{$info?d1?status}" tool="{$info?d1?toolName}" id="{$info?d1?tsId}">
                 <text>{$a/*:TextEquiv/*:Unicode/text()}</text>
                 <words>{
                   for $word at $pos in tokenize($a/*:TextEquiv/*:Unicode/text(), ' ') return
@@ -238,7 +246,7 @@ declare %private function trp-utils:compare ( $info as map() ) {
                       { $word }
                     </word>
                 }</words></l1>
-              <l2 status="{$info?d2?status}">
+              <l2 status="{$info?d2?status}" tool="{$info?d2?toolName}" id="{$info?d2?tsId}">
                 <text>{$b/*:TextEquiv/*:Unicode/text()}</text>
                 <words>{
                   for $word at $pos in tokenize($b/*:TextEquiv/*:Unicode/text(), ' ') return
@@ -252,4 +260,21 @@ declare %private function trp-utils:compare ( $info as map() ) {
       )
     }
   </page>
+};
+
+declare %private function trp-utils:dec-to-hex ( $in as xs:int ) {
+  let $internal := string-join(trp-utils:dec-to-hex-helper($in),'')
+  return if ( string-length($internal) mod 2 = 1 )
+    then '0' || $internal
+    else $internal
+};
+
+declare %private function trp-utils:dec-to-hex-helper ( $in as xs:int ) {
+  let $hex := '0123456789ABCDEF'
+  return (
+    if ( $in ge 16 )
+      then trp-utils:dec-to-hex-helper($in idiv 16)
+      else '',
+    substring($hex, ($in mod 16) + 1, 1)
+  )
 };
