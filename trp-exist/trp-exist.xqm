@@ -47,14 +47,38 @@ declare function trp:list-collection-contents ( $login as element(), $collection
   return if ( count($response) eq 2 ) then
       let $parsed := $response[2] => util:base64-decode() => parse-json()
       return
-        <collection>{
+        <collection id="{$collection}">{
           for $n in 1 to array:size($parsed) return
             <document>
               <title>{ $parsed($n)?title }</title>
               <docId>{ $parsed($n)?docId }</docId>
+              <nrOfPages>{ $parsed($n)?nrOfPages }</nrOfPages>
             </document>
         }</collection>
     else error($response)
+};
+
+(:~
+ : return some basic collection stats (no. of documents, total no. of pages))
+ : @param $login (element()) the Transkribus login info
+ : @param $collection (xs:string) the ID of the collection
+ :)
+declare function trp:collection-stats ( $login as element(trpUserLogin), $collection as xs:string ) as element(collection) {
+  let $response := trp:get($login, 'collections/' || $collection || '/list')
+    , $parsed := $response[2] => util:base64-decode() => parse-json()
+  
+  let $allPages := for $n in 1 to array:size($parsed)
+    return $parsed($n)?nrOfPages
+
+  let $colList := $parsed?1?collectionList?colList
+    , $colName := array:filter($colList, function ( $map ) { string($map?colId) = $collection })(1)?colName
+ 
+  return
+    <collection id="{$collection}">
+      <title>{ $colName }</title>
+      <nrOfDocuments>{ array:size($parsed) }</nrOfDocuments>
+      <totalPages>{ $allPages => sum() }</totalPages>
+    </collection>
 };
 
 (:~
