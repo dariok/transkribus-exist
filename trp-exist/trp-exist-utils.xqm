@@ -114,7 +114,7 @@ function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $c
                                         if ( $line/l2//word[@order = $w/@order] != $w )
                                           then attribute title { ($w => string-to-codepoints()) ! trp-utils:dec-to-hex(.) => string-join('-') }
                                           else (),
-                                        $w
+                                        translate($w, '&#xFEFF;', '¥')
                                       }
                                     </td>
                                 }
@@ -137,7 +137,7 @@ function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $c
                                         if ( $line/l1//word[@order = $w/@order] != $w )
                                           then attribute title { ($w => string-to-codepoints()) ! trp-utils:dec-to-hex(.) => string-join('-') }
                                           else (),
-                                        $w
+                                        translate($w, "&#xFEFF;", '¥')
                                       }
                                     </td>
                                 }
@@ -145,6 +145,7 @@ function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $c
                             </table>
                           else (
                             attribute class { 'lineok' },
+                            attribute data-style { $line/@style },
                             $line/node()
                           )
                         }
@@ -153,6 +154,7 @@ function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $c
                 }
               </table>
             </div>
+          <script src="function.js"></script>
         </body>
       </html>
   } catch * {
@@ -234,8 +236,10 @@ declare %private function trp-utils:compare ( $info as map() ) {
     {
       for-each-pair($d1//*:TextLine, $d2//*:TextLine,
         function ( $a, $b ) {
-          if ( $a/*:TextEquiv/*:Unicode = $b/*:TextEquiv/*:Unicode ) then
-            <line id="{$a/@id}">{ $a/*:TextEquiv/*:Unicode/text() }</line>
+          let $style := analyze-string($a/@custom, 'textStyle \{(.+)\}')/*:match/*:group
+
+          return if ( $a/*:TextEquiv/*:Unicode = $b/*:TextEquiv/*:Unicode ) then
+            <line id="{$a/@id}" style="{$style}">{ $a/*:TextEquiv/*:Unicode/text() }</line>
           else
             <line id="{$a/@id}">
               <l1 status="{$info?d1?status}" tool="{$info?d1?toolName}" id="{$info?d1?tsId}">
