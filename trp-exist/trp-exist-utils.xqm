@@ -19,6 +19,30 @@ function trp-utils:login ( $user as xs:string*, $pass as xs:string* ) as item() 
 
 declare
   %rest:GET
+  %rest:path("/trpex/collections")
+  %rest:query-param("sessionId", "{$sessionId}", "")
+function trp-utils:list-collections ( $sessionId as xs:string* ) as item()* {
+  let $collections := trp:list-collections(
+    <trpUserLogin>
+      <sessionId>{$sessionId}</sessionId>
+    </trpUserLogin>
+  )
+
+  return <ol>{
+    array:for-each($collections, function ( $map ) {
+      <li>
+        { util:log("info", $map) }
+        <a href="collections.html?id={$map?colId => number()}">
+          { $map?colName }
+        </a>
+        — { $map?description } ({ $map?nrOfDocuments => number() } documents)
+      </li>
+    })
+  }</ol>
+};
+
+declare
+  %rest:GET
   %rest:path("/trpex/compare/{$collectionId}/{$docId}/{$page}/latest.xml")
   %rest:query-param("sessionId", "{$sessionId}", "")
 function trp-utils:compare-latest-xml ( $sessionId as xs:string*, $collectionId as xs:int*, $docId as xs:int*, $page as xs:int* ) as element() {
@@ -53,6 +77,7 @@ function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $c
         <head>
           <title>{$docId}</title>
           <style>
+            body {{ font-size: 1.2em; }}
             .lineid {{ vertical-align: top; padding-top: 5px; }}
             .lineok {{ background-color: lightblue; }}
             .lineip {{ background-color: palevioletred; }}

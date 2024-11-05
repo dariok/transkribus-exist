@@ -35,6 +35,16 @@ declare function trp:login ( $user as xs:string, $pass as xs:string ) as item() 
 };
 
 (:~
+ : list all collections
+ :)
+declare function trp:list-collections ( $login as element() ) as item()* {
+  let $url := 'collections/list'
+    , $response := trp:get($login, $url)
+    , $content := $response[2] => string() => util:base64-decode()
+  return parse-json($content)
+};
+
+(:~
  : list the contents of a collection
  : @param $login (element()) the Transkribus login info
  : @param $collection (xs:string) the ID of the collection
@@ -164,9 +174,10 @@ declare %private function trp:connect ( $sessionID as xs:string, $method as xs:s
         </hc:request>
       )
     } catch * {
+      util:log("error", $err:code || ': '  || $err:description),
       <trp:error>{$err:code || ': '  || $err:description}</trp:error>
     }
-  
+  (: let $de := util:log("info", $result) :)
   return if ( $result instance of element(trp:error) )
     then error ( xs:QName("trp:error"), $result )
     else if ( $result instance of element(html) and contains($result//*:title, '401') )

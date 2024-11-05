@@ -44,9 +44,55 @@ function highlight ( line ) {
     line.innerHTML = htmlContent;
   }
 }
-window.addEventListener('DOMContentLoaded', function (event) {
-  const lines = document.getElementsByClassName("lineok");
-  for ( let l of lines ) {
-     highlight(l);
+window.addEventListener('DOMContentLoaded', function () {
+  const searchParams = new URLSearchParams(window.location.search);
+
+  document.getElementById('login-form')?.addEventListener('submit', ( event ) => {
+    event.preventDefault();
+  
+    let user = event.target?.[0].value
+      , pass = event.target?.[1].value;
+
+    let req = new XMLHttpRequest();
+    req.onload = () => {
+      if ( req.status != 200 ) {
+        document.getElementById('login-info').innerHTML = "Login failed";
+      } else {
+        let token = req.response;
+        window.location.href = "collections.html?sessionId=" + token;
+      }
+    }
+
+    let url = new URL('/exist/restxq/trpex/login', window.location.href);
+    url.searchParams.set('user', user);
+    url.searchParams.set('pass', pass);
+    req.open('GET', url);
+    req.send();
+  });
+
+  if ( this.window.location.pathname.endsWith("collections.html") && !searchParams.has('id') ) {
+    let listsUrl = new URL('/exist/restxq/trpex/collections', window.location.href);
+    listsUrl.searchParams.set("sessionId", searchParams.get('sessionId'));
+
+    let req = new XMLHttpRequest();
+    req.onload = () => {
+      if ( req.status != 200 ) {
+        console.log("error: ", req.response);
+        document.getElementById('collection-info').innerHTML = "Error getting collections";
+      } else {
+        document.getElementById('collection').innerHTML = req.responseText;
+      }
+    }
+    req.open('GET', listsUrl);
+    req.send();
+  } else if ( this.window.location.pathname.endsWith("collections.html") && searchParams.has('id') ) {
+    
+  }
+
+  if ( document.getElementsByClassName("lineok") != undefined ) {
+    const lines = document.getElementsByClassName("lineok");
+    for ( let l of lines ) {
+      highlight(l);
+    }
   }
 });
