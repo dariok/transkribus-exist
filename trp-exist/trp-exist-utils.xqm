@@ -31,14 +31,36 @@ function trp-utils:list-collections ( $sessionId as xs:string* ) as item()* {
   return <ol>{
     array:for-each($collections, function ( $map ) {
       <li>
-        { util:log("info", $map) }
-        <a href="collections.html?id={$map?colId => number()}">
+        <a href="collections.html?collection={$map?colId => number()}&amp;sessionId={$sessionId}">
           { $map?colName }
         </a>
         — { $map?description } ({ $map?nrOfDocuments => number() } documents)
       </li>
     })
   }</ol>
+};
+
+declare
+  %rest:GET
+  %rest:path("/trpex/collections/{$collectionId}/list")
+  %rest:query-param("sessionId", "{$sessionId}", "")
+function trp-utils:list-collection-contents ( $sessionId as xs:string*, $collectionId as xs:int* ) as element() {
+  let $login :=
+    <trpUserLogin>
+      <sessionId>{$sessionId}</sessionId>
+    </trpUserLogin>
+  let $contents := trp:list-collection-contents($login, $collectionId)
+    , $collection-stats := trp:collection-stats($login, $collectionId)
+
+  return <div>
+    <h2>{ $collection-stats//title/text() }</h2>
+    <ul>{
+      for $document in $contents//document return
+        <li>{ $document/title/text() } ({ $document/nrOfPages/text()} pages)
+          — <a href="compare.html?sessionId={$sessionId}&amp;document={ xs:int(number($document/docId)) }">compare recent</a>
+        </li>
+    }</ul>
+  </div>
 };
 
 declare

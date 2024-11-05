@@ -56,6 +56,7 @@ declare function trp:list-collection-contents ( $login as element(), $collection
 
   return if ( count($response) eq 2 ) then
       let $parsed := $response[2] => util:base64-decode() => parse-json()
+      
       return
         <collection id="{$collection}">{
           for $n in 1 to array:size($parsed) return

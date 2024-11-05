@@ -70,23 +70,27 @@ window.addEventListener('DOMContentLoaded', function () {
     req.send();
   });
 
-  if ( this.window.location.pathname.endsWith("collections.html") && !searchParams.has('id') ) {
-    let listsUrl = new URL('/exist/restxq/trpex/collections', window.location.href);
+  if ( this.window.location.pathname.endsWith("collections.html") ) {
+    let listsUrl;
+    if ( searchParams.has('collection') ) {
+      listsUrl = new URL('/exist/restxq/trpex/collections/' + searchParams.get('collection') + '/list', window.location.href);
+    } else {
+      listsUrl = new URL('/exist/restxq/trpex/collections', window.location.href);
+    }
+    
     listsUrl.searchParams.set("sessionId", searchParams.get('sessionId'));
 
     let req = new XMLHttpRequest();
     req.onload = () => {
       if ( req.status != 200 ) {
         console.log("error: ", req.response);
-        document.getElementById('collection-info').innerHTML = "Error getting collections";
+        document.getElementById('collection-info').innerHTML = "Error getting info";
       } else {
         document.getElementById('collection').innerHTML = req.responseText;
       }
     }
     req.open('GET', listsUrl);
     req.send();
-  } else if ( this.window.location.pathname.endsWith("collections.html") && searchParams.has('id') ) {
-    
   }
 
   if ( document.getElementsByClassName("lineok") != undefined ) {
