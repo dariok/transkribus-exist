@@ -87,25 +87,39 @@ window.addEventListener('DOMContentLoaded', function () {
         document.getElementById('collection-info').innerHTML = "Error getting info";
       } else {
         document.getElementById('collection').innerHTML = req.responseText;
+        document.getElementById('collection-info').innerHTML = '<a href="?sessionId=' + searchParams.get('sessionId') + '">List collections</a>';
       }
     }
     req.open('GET', listsUrl);
     req.send();
   } else if ( window.location.pathname.endsWith("compare.html") ) {
-    let url = '/exist/restxq/trpex/collections/'
-            + searchParams.get('collection') + '/'
-            + searchParams.get('document') + '/info';
-    let mdUrl = new URL(url, window.location.href)
-      , mdReq = new XMLHttpRequest();
+    const collection = searchParams.get('collection')
+        , documentId = searchParams.get('document')
+        , sessionId = searchParams.get('sessionId')
+        , page = searchParams.has('page') ? parseInt(searchParams.get('page')) : 1;
+    
+    let url = `/exist/restxq/trpex/collections/${collection}/${documentId}/info`
+      , mdUrl = new URL(url, window.location.href)
+      , mdReq = new XMLHttpRequest()
+      , pageNav = document.createElement('p');
+
     mdReq.onload = () => {
       if ( mdReq.status == 200 ) {
-        let mdResponse = JSON.parse(mdReq.response);
-        document.getElementById('comparison-info').outerHTML = '<div>\
-        <h1>' + mdResponse.md.title + ' (' + mdResponse.collection.colName + ')</h1>\
-        <p><a href="collections.html?sessionId=' + searchParams.get('sessionId')
-          + '&collection=' + searchParams.get('collection')
-          + '">back to document list</a></p>\
-        </div>';
+        let mdResponse = JSON.parse(mdReq.response)
+          , numPages = mdResponse.md.nrOfPages;
+        document.getElementById('comparison-info').outerHTML
+           = `<div>
+                <h1>${mdResponse.md.title} ( ${mdResponse.collection.colName} )</h1>
+                <p><a href="collections.html?sessionId=${sessionId}&collection=${collection}">back to document list</a></p>
+              </div>`;
+        
+        pageNav.innerHTML = `<a href="?sessionId=${sessionId}&document=${documentId}&collection=${collection}&page=1">1</a> `
+        if ( page > 2) pageNav.innerHTML
+            += `&lt;&lt; <a href="?sessionId=${sessionId}&document=${documentId}&collection=${collection}&page=${page - 1}">${page - 1}</a> `;
+        pageNav.innerHTML += `[${page} of ${numPages}]`;
+        if ( page < numPages ) pageNav.innerHTML
+            += ` <a href="?sessionId=${sessionId}&document=${documentId}&collection=${collection}&page=${page + 1}">${page + 1}</a>`;
+        pageNav.innerHTML += ` &gt;&gt; <a href="?sessionId=${sessionId}&document=${documentId}&collection=${collection}&page=${numPages}">${numPages}</a>`;
       } else {
         console.log(req.response);
       }
@@ -113,11 +127,7 @@ window.addEventListener('DOMContentLoaded', function () {
     mdReq.open("GET", mdUrl);
     mdReq.send();
 
-    let page = searchParams.has('page') ? searchParams.get('page') : 1;
-    url = '/exist/restxq/trpex/compare/'
-          + searchParams.get('collection') + '/'
-          + searchParams.get('document') + '/'
-          + page + '/latest';
+    url = `/exist/restxq/trpex/compare/${collection}/${documentId}/${page}/latest`;
     
     let compareUrl = new URL(url, window.location.href);
     compareUrl.searchParams.set("sessionId", searchParams.get('sessionId'));
@@ -128,7 +138,13 @@ window.addEventListener('DOMContentLoaded', function () {
         console.log("error: ", req.response);
         document.getElementById('comparison-info').innerHTML = "Error getting info";
       } else {
-        document.getElementById('comparison').innerHTML = req.responseText;
+        const parser = new DOMParser()
+            , comparison = parser.parseFromString(req.responseText,'text/html');
+        
+        document.getElementById('comparison')?.appendChild(comparison.getElementsByTagName('style')[0]);
+        document.getElementById('comparison')?.appendChild(comparison.getElementsByTagName('h2')[0]);
+        document.getElementById('comparison')?.appendChild(pageNav);
+        document.getElementById('comparison')?.appendChild(comparison.getElementsByTagName('table')[0]);
       }
     }
     req.open('GET', compareUrl);
