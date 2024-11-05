@@ -60,7 +60,7 @@ function trp-utils:list-collection-contents ( $sessionId as xs:string*, $collect
           — <a href="compare.html?sessionId={
             $sessionId}&amp;document={
             xs:int(number($document/docId))}&amp;collection={
-            $collectionId}">compare recent</a>
+            $collectionId}&amp;page=1">compare recent</a>
         </li>
     }</ul>
   </div>

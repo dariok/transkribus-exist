@@ -90,6 +90,8 @@ window.addEventListener('DOMContentLoaded', function () {
         document.getElementById('collection-info').innerHTML = '<a href="?sessionId=' + searchParams.get('sessionId') + '">List collections</a>';
       }
     }
+    req.onloadstart = () => { document.getElementById('collection-info').innerHTML = "loading"; }
+    req.onprogress = () => { document.getElementById('collection-info').innerHTML += "."; }
     req.open('GET', listsUrl);
     req.send();
   } else if ( window.location.pathname.endsWith("compare.html") ) {
