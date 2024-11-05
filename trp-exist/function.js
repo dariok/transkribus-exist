@@ -70,7 +70,7 @@ window.addEventListener('DOMContentLoaded', function () {
     req.send();
   });
 
-  if ( this.window.location.pathname.endsWith("collections.html") ) {
+  if ( window.location.pathname.endsWith("collections.html") ) {
     let listsUrl;
     if ( searchParams.has('collection') ) {
       listsUrl = new URL('/exist/restxq/trpex/collections/' + searchParams.get('collection') + '/list', window.location.href);
@@ -90,6 +90,48 @@ window.addEventListener('DOMContentLoaded', function () {
       }
     }
     req.open('GET', listsUrl);
+    req.send();
+  } else if ( window.location.pathname.endsWith("compare.html") ) {
+    let url = '/exist/restxq/trpex/collections/'
+            + searchParams.get('collection') + '/'
+            + searchParams.get('document') + '/info';
+    let mdUrl = new URL(url, window.location.href)
+      , mdReq = new XMLHttpRequest();
+    mdReq.onload = () => {
+      if ( mdReq.status == 200 ) {
+        let mdResponse = JSON.parse(mdReq.response);
+        document.getElementById('comparison-info').outerHTML = '<div>\
+        <h1>' + mdResponse.md.title + ' (' + mdResponse.collection.colName + ')</h1>\
+        <p><a href="collections.html?sessionId=' + searchParams.get('sessionId')
+          + '&collection=' + searchParams.get('collection')
+          + '">back to document list</a></p>\
+        </div>';
+      } else {
+        console.log(req.response);
+      }
+    }
+    mdReq.open("GET", mdUrl);
+    mdReq.send();
+
+    let page = searchParams.has('page') ? searchParams.get('page') : 1;
+    url = '/exist/restxq/trpex/compare/'
+          + searchParams.get('collection') + '/'
+          + searchParams.get('document') + '/'
+          + page + '/latest';
+    
+    let compareUrl = new URL(url, window.location.href);
+    compareUrl.searchParams.set("sessionId", searchParams.get('sessionId'));
+
+    let req = new XMLHttpRequest();
+    req.onload = () => {
+      if ( req.status != 200 ) {
+        console.log("error: ", req.response);
+        document.getElementById('comparison-info').innerHTML = "Error getting info";
+      } else {
+        document.getElementById('comparison').innerHTML = req.responseText;
+      }
+    }
+    req.open('GET', compareUrl);
     req.send();
   }
 

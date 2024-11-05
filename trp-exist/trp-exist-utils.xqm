@@ -57,10 +57,27 @@ function trp-utils:list-collection-contents ( $sessionId as xs:string*, $collect
     <ul>{
       for $document in $contents//document return
         <li>{ $document/title/text() } ({ $document/nrOfPages/text()} pages)
-          — <a href="compare.html?sessionId={$sessionId}&amp;document={ xs:int(number($document/docId)) }">compare recent</a>
+          — <a href="compare.html?sessionId={
+            $sessionId}&amp;document={
+            xs:int(number($document/docId))}&amp;collection={
+            $collectionId}">compare recent</a>
         </li>
     }</ul>
   </div>
+};
+
+declare
+  %rest:GET
+  %rest:path("/trpex/collections/{$collectionId}/{$docId}/info")
+  %rest:query-param("sessionId", "{$sessionId}", "")
+  %output:method("json")
+function trp-utils:compare-latest-xml ( $sessionId as xs:string*, $collectionId as xs:int*, $docId as xs:int* ) as item() {
+  let $login :=
+    <trpUserLogin>
+      <sessionId>{$sessionId}</sessionId>
+    </trpUserLogin>
+  
+  return trp:get-document-metadata($login, $collectionId, $docId)
 };
 
 declare
