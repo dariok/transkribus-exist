@@ -82,7 +82,7 @@ declare function trp:collection-stats ( $login as element(trpUserLogin), $collec
     return $parsed($n)?nrOfPages
 
   let $colList := $parsed?1?collectionList?colList
-    , $colName := array:filter($colList, function ( $map ) { string($map?colId) = $collection })(1)?colName
+    , $colName := array:filter($colList, function ( $map ) { string(xs:integer(number($map?colId))) = $collection })(1)?colName
  
   return
     <collection id="{$collection}">

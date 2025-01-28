@@ -31,7 +31,7 @@ function trp-utils:list-collections ( $sessionId as xs:string* ) as item()* {
   return <ol>{
     array:for-each($collections, function ( $map ) {
       <li>
-        <a href="collections.html?collection={$map?colId => number()}&amp;sessionId={$sessionId}">
+        <a href="collections.html?collection={ $map?colId => number() => xs:integer() }&amp;sessionId={$sessionId}">
           { $map?colName }
         </a>
         — { $map?description } ({ $map?nrOfDocuments => number() } documents)
