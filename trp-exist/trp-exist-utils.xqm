@@ -54,15 +54,28 @@ function trp-utils:list-collection-contents ( $sessionId as xs:string*, $collect
 
   return <div>
     <h2>{ $collection-stats//title/text() }</h2>
-    <ul>{
-      for $document in $contents//document return
-        <li>{ $document/title/text() } ({ $document/nrOfPages/text()} pages)
-          — <a href="compare.html?sessionId={
-            $sessionId}&amp;document={
-            xs:int(number($document/docId))}&amp;collection={
-            $collectionId}&amp;page=1">compare recent</a>
-        </li>
-    }</ul>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>No. of pages</th>
+          <th>actions</th>
+        </tr>
+      </thead>
+      <tbody>{
+        for $document in $contents//document return
+          <tr>
+            <td>{ $document/docId }</td>
+            <td>{ $document/title/text() }</td>
+            <td>{ $document/nrOfPages/text() }</td>
+            <td><a href="compare.html?sessionId={
+                  $sessionId}&amp;document={
+                  $document/docId}&amp;collection={
+                  $collectionId}&amp;page=1">compare recent</a></td>
+          </tr>
+      }</tbody>
+    </table>
   </div>
 };
 
