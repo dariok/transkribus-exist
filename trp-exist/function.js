@@ -98,11 +98,14 @@ window.addEventListener('DOMContentLoaded', function () {
     const collection = searchParams.get('collection')
         , documentId = searchParams.get('document')
         , sessionId = searchParams.get('sessionId')
-        , page = searchParams.has('page') ? parseInt(searchParams.get('page')) : 1;
+        , page = searchParams.has('page') ? parseInt(searchParams.get('page')) : 1
+        , transcriptNo = searchParams.has('transcriptNo') ? parseInt(searchParams.get('transcriptNo')) : 2
+    ;
     
     let url = `/exist/restxq/trpex/collections/${collection}/${documentId}/info`
       , mdUrl = new URL(url, window.location.href)
-      , mdReq = new XMLHttpRequest();
+      , mdReq = new XMLHttpRequest()
+    ;
 
     mdReq.onload = () => {
       if ( mdReq.status == 200 ) {
@@ -119,25 +122,14 @@ window.addEventListener('DOMContentLoaded', function () {
     }
     mdReq.open("GET", mdUrl);
     mdReq.send();
-
-    url = `/exist/restxq/trpex/compare/${collection}/${documentId}/${page}/latest`;
     
-    let compareUrl = new URL(url, window.location.href);
-    compareUrl.searchParams.set("sessionId", searchParams.get('sessionId'));
-
-    let req = new XMLHttpRequest();
-    req.onload = () => {
-      if ( req.status != 200 ) {
-        console.log("error: ", req.response);
-        document.getElementById('comparison-info').innerHTML = "Error getting info";
-      } else {
-        const parser = new DOMParser()
-            , comparison = parser.parseFromString(req.responseText,'text/html');
-        document.getElementsByTagName('body')[0]?.appendChild(comparison.getElementById('comparison'));
-      }
-    }
-    req.open('GET', compareUrl);
-    req.send();
+    loadComparison(collection, documentId, page, sessionId, transcriptNo);
+    
+    window.addEventListener('change', function ( event ) {
+       if ( event.target.id == 'transcriptVersion') {
+         loadComparison( collection, documentId, page, sessionId, event.target.value);
+       }
+    });
   }
 
   if ( document.getElementsByClassName("lineok") != undefined ) {
@@ -147,3 +139,25 @@ window.addEventListener('DOMContentLoaded', function () {
     }
   }
 });
+
+function loadComparison ( collection, documentId, page, sessionId, transcriptNo ) {
+  let url = `/exist/restxq/trpex/compare/${collection}/${documentId}/${page}/latest`;
+    
+  let compareUrl = new URL(url, window.location.href);
+  compareUrl.searchParams.set("sessionId", sessionId);
+  compareUrl.searchParams.set("transcriptNo", transcriptNo);
+
+  let req = new XMLHttpRequest();
+  req.onload = () => {
+    if ( req.status != 200 ) {
+      console.log("error: ", req.response);
+      document.getElementById('comparison-info').innerHTML = "Error getting info";
+    } else {
+      const parser = new DOMParser()
+          , comparison = parser.parseFromString(req.responseText,'text/html');
+      document.getElementsByTagName('body')[0].children[1].replaceChildren(comparison.getElementById('comparison'));
+    }
+  }
+  req.open('GET', compareUrl);
+  req.send();
+}

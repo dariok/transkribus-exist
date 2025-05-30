@@ -28,16 +28,28 @@ function trp-utils:list-collections ( $sessionId as xs:string* ) as item()* {
     </trpUserLogin>
   )
 
-  return <ol>{
-    array:for-each($collections, function ( $map ) {
-      <li>
-        <a href="collections.html?collection={ $map?colId => number() => xs:integer() }&amp;sessionId={$sessionId}">
-          { $map?colName }
-        </a>
-        — { $map?description } ({ $map?nrOfDocuments => number() } documents)
-      </li>
-    })
-  }</ol>
+  return <table>
+    <tr>
+      <th>lfd.</th>
+      <th>Title</th>
+      <th>Info</th>
+      <th># doc</th>
+    </tr>
+    {
+      array:for-each($collections, function ( $map as map(*) ) {
+        <tr>
+          <td>{  }</td>
+          <td>
+            <a href="collections.html?collection={ $map?colId => number() => xs:integer() }&amp;sessionId={$sessionId}">
+              { $map?colName }
+            </a>
+          </td>
+          <td>{ $map?description }</td>
+          <td>({ $map?nrOfDocuments => number() } documents)</td>
+        </tr>
+      })
+    }
+  </table>
 };
 
 declare
@@ -97,38 +109,57 @@ declare
   %rest:GET
   %rest:path("/trpex/compare/{$collectionId}/{$docId}/{$page}/latest.xml")
   %rest:query-param("sessionId", "{$sessionId}", "")
-function trp-utils:compare-latest-xml ( $sessionId as xs:string*, $collectionId as xs:int*, $docId as xs:int*, $page as xs:int* ) as element() {
+  %rest:query-param("transcriptNo", "{$transcriptNo}", 2)
+function trp-utils:compare-latest-xml ( $sessionId as xs:string*, $collectionId as xs:int*, $docId as xs:int*, $page as xs:int*, $transcriptNo as xs:int* ) as element() {
   trp-utils:compare-last-text-versions (
       <trpUserLogin>
         <sessionId>{$sessionId}</sessionId>
       </trpUserLogin>,
       $collectionId,
       $docId,
-      $page
+      $page,
+      $transcriptNo
     )
 };
 
 declare
   %rest:GET
-  %rest:path("/trpex/compare/{$collectionId}/{$docId}/{$page}/latest")
+  %rest:path("/trpex/compare/{$collectionId}/{$docId}/{$pageNo}/latest")
   %rest:query-param("sessionId", "{$sessionId}", "")
-function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $collectionId as xs:int*, $docId as xs:int*, $page as xs:int* ) as element() {
+  %rest:query-param("transcriptNo", "{$transcriptNo}", 2)
+function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $collectionId as xs:int*, $docId as xs:int*, $pageNo as xs:int*, $transcriptNo as xs:int* ) as element() {
   try {
-    let $page := trp-utils:compare-last-text-versions (
+    let $login :=
           <trpUserLogin>
             <sessionId>{$sessionId}</sessionId>
-          </trpUserLogin>,
+          </trpUserLogin>
+      , $page := trp-utils:compare-last-text-versions (
+          $login,
           $collectionId,
           $docId,
-          $page
+          $pageNo,
+          $transcriptNo
         )
-      , $queryString := "?sessionId=" || $sessionId  || "&amp;collection=" || $collectionId || "&amp;document=" || $docId || "&amp;page="  
+      , $queryString := "?sessionId=" || $sessionId  || "&amp;collection=" || $collectionId || "&amp;document=" || $docId || "&amp;page="
+    
+    let $md := trp:get-document-metadata($login, $collectionId, $docId)
+      , $transcripts := ($md?pageList?pages)(101)?tsList?transcripts
 
     return
       <div id="comparison">
         <h1>{$collectionId} – {$docId}</h1>
         <div>
           <h2>{ string($page/@file) }</h2>
+          <p>Version:
+            <select id="transcriptVersion">{
+              for $i in 1 to array:size($transcripts)
+                let $transcript := $transcripts($i)
+                return <option value="{ $i }">
+                    { if ( $i = $transcriptNo ) then attribute selected { "selected" } else () }
+                    { '(' || number($transcript?tsId) || ') ' || $transcript?toolName || ' – ' || $transcript?status }
+                </option>
+            }</select>
+          </p>
           <p class="info">
             <span class="infoLeft">
               <a href="{$queryString}1">1</a> &lt;&lt;
@@ -204,9 +235,9 @@ function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $c
                                         then "linegt"
                                         else "lineip"
                                     },
-                                    if ( $line/l1//word[@order = $w/@order] != $w )
-                                      then attribute title { ($w => string-to-codepoints()) ! trp-utils:dec-to-hex(.) => string-join('-') }
-                                      else (),
+                                    attribute title {
+                                      ($w => string-to-codepoints()) ! trp-utils:dec-to-hex(.) => string-join('-')
+                                    },
                                     translate($w, "&#xFEFF;", '¥')
                                   }
                                 </td>
@@ -267,7 +298,7 @@ declare function trp-utils:compare-last-text-versions ( $login as element(), $co
   }
 };
 
-declare function trp-utils:compare-last-text-versions ( $login as element(), $collection as xs:int, $docId as xs:int, $page as xs:int ) {
+declare function trp-utils:compare-last-text-versions ( $login as element(), $collection as xs:int, $docId as xs:int, $page as xs:int, $transcriptNo as xs:int ) {
   let $md := trp:get-document-metadata($login, $collection, $docId)
   
   return try {
@@ -279,7 +310,7 @@ declare function trp-utils:compare-last-text-versions ( $login as element(), $co
           "page": $page,
           "max":  $max,
           "d1":   $pages?tsList?transcripts(1),
-          "d2":   $pages?tsList?transcripts(2)
+          "d2":   $pages?tsList?transcripts($transcriptNo)
         }
     return trp-utils:compare($transcripts)
   } catch * {
