@@ -102,8 +102,7 @@ window.addEventListener('DOMContentLoaded', function () {
     
     let url = `/exist/restxq/trpex/collections/${collection}/${documentId}/info`
       , mdUrl = new URL(url, window.location.href)
-      , mdReq = new XMLHttpRequest()
-      , pageNav = document.createElement('p');
+      , mdReq = new XMLHttpRequest();
 
     mdReq.onload = () => {
       if ( mdReq.status == 200 ) {
@@ -114,14 +113,6 @@ window.addEventListener('DOMContentLoaded', function () {
                 <h1>${mdResponse.md.title} ( ${mdResponse.collection.colName} )</h1>
                 <p><a href="collections.html?sessionId=${sessionId}&collection=${collection}">back to document list</a></p>
               </div>`;
-        
-        pageNav.innerHTML = `<a href="?sessionId=${sessionId}&document=${documentId}&collection=${collection}&page=1">1</a> `
-        if ( page > 2) pageNav.innerHTML
-            += `&lt;&lt; <a href="?sessionId=${sessionId}&document=${documentId}&collection=${collection}&page=${page - 1}">${page - 1}</a> `;
-        pageNav.innerHTML += `[${page} of ${numPages}]`;
-        if ( page < numPages ) pageNav.innerHTML
-            += ` <a href="?sessionId=${sessionId}&document=${documentId}&collection=${collection}&page=${page + 1}">${page + 1}</a>`;
-        pageNav.innerHTML += ` &gt;&gt; <a href="?sessionId=${sessionId}&document=${documentId}&collection=${collection}&page=${numPages}">${numPages}</a>`;
       } else {
         console.log(req.response);
       }
@@ -142,11 +133,7 @@ window.addEventListener('DOMContentLoaded', function () {
       } else {
         const parser = new DOMParser()
             , comparison = parser.parseFromString(req.responseText,'text/html');
-        
-        document.getElementById('comparison')?.appendChild(comparison.getElementsByTagName('style')[0]);
-        document.getElementById('comparison')?.appendChild(comparison.getElementsByTagName('h2')[0]);
-        document.getElementById('comparison')?.appendChild(pageNav);
-        document.getElementById('comparison')?.appendChild(comparison.getElementsByTagName('table')[0]);
+        document.getElementsByTagName('body')[0]?.appendChild(comparison.getElementById('comparison'));
       }
     }
     req.open('GET', compareUrl);

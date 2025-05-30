@@ -112,7 +112,6 @@ declare
   %rest:GET
   %rest:path("/trpex/compare/{$collectionId}/{$docId}/{$page}/latest")
   %rest:query-param("sessionId", "{$sessionId}", "")
-  %output:method("html")
 function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $collectionId as xs:int*, $docId as xs:int*, $page as xs:int* ) as element() {
   try {
     let $page := trp-utils:compare-last-text-versions (
@@ -123,117 +122,109 @@ function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $c
           $docId,
           $page
         )
+      , $queryString := "?sessionId=" || $sessionId  || "&amp;collection=" || $collectionId || "&amp;document=" || $docId || "&amp;page="  
 
     return
-      <html>
-        <head>
-          <title>{$docId}</title>
-          <style>
-            body {{ font-size: 1.2em; }}
-            .lineid {{ vertical-align: top; padding-top: 5px; }}
-            .lineok {{ background-color: lightblue; }}
-            .lineip {{ background-color: palevioletred; }}
-            .linegt {{ background-color: lightgreen; }}
-          </style>
-        </head>
-        <body>
-          <h1>{$collectionId} – {$docId}</h1>
-            <div>
-              <h2>{ string($page/@file) }</h2>
-              <p>
-                <a href="../1/latest?sessionId={ $sessionId }">1</a> &lt;&lt;
-                {
-                  if ( number($page/@current) gt 2 )
-                    then
-                      let $previousPage := number($page/@current) - 1
-                      return <a href="../{ $previousPage }/latest?sessionId={ $sessionId }">{ $previousPage }</a>
-                    else ()
-                }
-                [{ string($page/@current) } of { string($page/@max) }]
-                {
-                  if ( number($page/@current) lt number($page/@max) )
-                    then
-                      let $nextPage := number($page/@current) + 1
-                      return <a href="../{ $nextPage }/latest?sessionId={ $sessionId }">{ $nextPage }</a>
-                    else ()
-                }
-                >>
-                <a href="../{ string($page/@max) }/latest?sessionId={ $sessionId }">{ string($page/@max) }</a>
-                </p>
-              <table>
+      <div id="comparison">
+        <h1>{$collectionId} – {$docId}</h1>
+        <div>
+          <h2>{ string($page/@file) }</h2>
+          <p class="info">
+            <span class="infoLeft">
+              <a href="{$queryString}1">1</a> &lt;&lt;
+              {
+                if ( number($page/@current) gt 2 )
+                  then
+                    let $previousPage := number($page/@current) - 1
+                    return <a href="{$queryString || $previousPage}">{ $previousPage }</a>
+                  else ()
+              }
+            </span>
+            <span class="infoCentre">[<b>{ string($page/@current) }</b> of { string($page/@max) }]</span>
+            <span class="infoRight">
+              {
+                if ( number($page/@current) lt number($page/@max) )
+                  then
+                    let $nextPage := number($page/@current) + 1
+                    return <a href="{$queryString || $nextPage}">{ $nextPage }</a>
+                  else ()
+              }
+              >>
+              <a href="{$queryString || $page/@xmax}">{ string($page/@max) }</a>
+            </span>
+          </p>
+          <table>
+            <tr>
+              <th>Line ID</th>
+              <th>Text</th>
+            </tr>
+            {
+              for $line in $page/line return
                 <tr>
-                  <th>Line ID</th>
-                  <th>Text</th>
+                  <td class="lineid">{ string($line/@id) }</td>
+                  <td>
+                    {
+                      if ( $line/l2 ) then
+                        <table>
+                          <tr>
+                            <td>
+                              <b title="{ string-join($line/l1/@*[not(name() = 'id')], ' – ') }">
+                                { xs:int(number($line/l1/@id)) }
+                              </b>
+                            </td>
+                            {
+                              for $w in $line/l1//word return
+                                <td>
+                                  {
+                                    attribute class {
+                                      if ( $line/l2//word[@order = $w/@order] = $w )
+                                        then "linegt"
+                                        else "lineip"
+                                    },
+                                    if ( $line/l2//word[@order = $w/@order] != $w )
+                                      then attribute title { ($w => string-to-codepoints()) ! trp-utils:dec-to-hex(.) => string-join('-') }
+                                      else (),
+                                    translate($w, '&#xFEFF;', '¥')
+                                  }
+                                </td>
+                            }
+                          </tr>
+                          <tr>
+                            <td>
+                              <b title="{ string-join($line/l2/@*[not(name() = 'id')], ' – ') }">
+                                { xs:int(number($line/l2/@id)) }
+                              </b>
+                            </td>
+                            {
+                              for $w in $line/l2//word return
+                                <td>
+                                  {
+                                    attribute class {
+                                      if ( $line/l1//word[@order = $w/@order] = $w )
+                                        then "linegt"
+                                        else "lineip"
+                                    },
+                                    if ( $line/l1//word[@order = $w/@order] != $w )
+                                      then attribute title { ($w => string-to-codepoints()) ! trp-utils:dec-to-hex(.) => string-join('-') }
+                                      else (),
+                                    translate($w, "&#xFEFF;", '¥')
+                                  }
+                                </td>
+                            }
+                          </tr>
+                        </table>
+                      else (
+                        attribute class { 'lineok' },
+                        attribute data-style { $line/@style },
+                        $line/node()
+                      )
+                    }
+                  </td>
                 </tr>
-                {
-                  for $line in $page/line return
-                    <tr>
-                      <td class="lineid">{ string($line/@id) }</td>
-                      <td>
-                        {
-                          if ( $line/l2 ) then
-                            <table>
-                              <tr>
-                                <td>
-                                  <b title="{ string-join($line/l1/@*[not(name() = 'id')], ' – ') }">
-                                    { xs:int(number($line/l1/@id)) }
-                                  </b>
-                                </td>
-                                {
-                                  for $w in $line/l1//word return
-                                    <td>
-                                      {
-                                        attribute class {
-                                          if ( $line/l2//word[@order = $w/@order] = $w )
-                                            then "linegt"
-                                            else "lineip"
-                                        },
-                                        if ( $line/l2//word[@order = $w/@order] != $w )
-                                          then attribute title { ($w => string-to-codepoints()) ! trp-utils:dec-to-hex(.) => string-join('-') }
-                                          else (),
-                                        translate($w, '&#xFEFF;', '¥')
-                                      }
-                                    </td>
-                                }
-                              </tr>
-                              <tr>
-                                <td>
-                                  <b title="{ string-join($line/l2/@*[not(name() = 'id')], ' – ') }">
-                                    { xs:int(number($line/l2/@id)) }
-                                  </b>
-                                </td>
-                                {
-                                  for $w in $line/l2//word return
-                                    <td>
-                                      {
-                                        attribute class {
-                                          if ( $line/l1//word[@order = $w/@order] = $w )
-                                            then "linegt"
-                                            else "lineip"
-                                        },
-                                        if ( $line/l1//word[@order = $w/@order] != $w )
-                                          then attribute title { ($w => string-to-codepoints()) ! trp-utils:dec-to-hex(.) => string-join('-') }
-                                          else (),
-                                        translate($w, "&#xFEFF;", '¥')
-                                      }
-                                    </td>
-                                }
-                              </tr>
-                            </table>
-                          else (
-                            attribute class { 'lineok' },
-                            attribute data-style { $line/@style },
-                            $line/node()
-                          )
-                        }
-                      </td>
-                    </tr>
-                }
-              </table>
-            </div>
-          <script src="function.js"></script>
-        </body>
-      </html>
+            }
+          </table>
+        </div>
+      </div>
   } catch * {
     util:parse-html($err:description)/*
   }
