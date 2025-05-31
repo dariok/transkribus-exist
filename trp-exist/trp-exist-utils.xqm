@@ -146,116 +146,115 @@ function trp-utils:compare-last-text-version-rest ( $sessionId as xs:string*, $c
       , $transcripts := ($md?pageList?pages)(101)?tsList?transcripts
 
     return
-      <div id="comparison">
-        <h1>{$collectionId} – {$docId}</h1>
-        <div>
-          <h2>{ string($page/@file) }</h2>
-          <p>Version:
-            <select id="transcriptVersion">{
-              for $i in 1 to array:size($transcripts)
-                let $transcript := $transcripts($i)
-                return <option value="{ $i }">
-                    { if ( $i = $transcriptNo ) then attribute selected { "selected" } else () }
-                    { '(' || number($transcript?tsId) || ') ' || $transcript?toolName || ' – ' || $transcript?status }
-                </option>
-            }</select>
-          </p>
-          <p class="info">
-            <span class="infoLeft">
-              <a href="{$queryString}1">1</a> &lt;&lt;
-              {
-                if ( number($page/@current) gt 2 )
-                  then
-                    let $previousPage := number($page/@current) - 1
-                    return <a href="{$queryString || $previousPage}">{ $previousPage }</a>
-                  else ()
-              }
-            </span>
-            <span class="infoCentre">[<b>{ string($page/@current) }</b> of { string($page/@max) }]</span>
-            <span class="infoRight">
-              {
-                if ( number($page/@current) lt number($page/@max) )
-                  then
-                    let $nextPage := number($page/@current) + 1
-                    return <a href="{$queryString || $nextPage}">{ $nextPage }</a>
-                  else ()
-              }
-              >>
-              <a href="{$queryString || $page/@xmax}">{ string($page/@max) }</a>
-            </span>
-          </p>
-          <table>
-            <tr>
-              <th>Line ID</th>
-              <th>Text</th>
-            </tr>
-            {
-              for $line in $page/line return
+        <div id="comparison">
+          <h1>{$collectionId} – {$docId}</h1>
+            <div>
+              <h2>{ string($page/@file) }</h2>
+              <p>Version:
+                <select id="transcriptVersion">{
+                  for $i in 1 to array:size($transcripts)
+                    let $transcript := $transcripts($i)
+                    return <option value="{ $i }">
+                       { if ( $i = $transcriptNo ) then attribute selected { "selected" } else () }
+                       { '(' || number($transcript?tsId) || ') ' || $transcript?toolName || ' – ' || $transcript?status }
+                    </option>
+                }</select></p>
+              <p class="info">
+                <span class="infoLeft">
+                  <a href="{$queryString}1">1</a> &lt;&lt;
+                  {
+                    if ( number($page/@current) gt 2 )
+                      then
+                        let $previousPage := number($page/@current) - 1
+                        return <a href="{$queryString || $previousPage}">{ $previousPage }</a>
+                      else ()
+                  }
+                </span>
+                <span class="infoCentre">[<b>{ string($page/@current) }</b> of { string($page/@max) }]</span>
+                <span class="infoRight">
+                  {
+                    if ( number($page/@current) lt number($page/@max) )
+                      then
+                        let $nextPage := number($page/@current) + 1
+                        return <a href="{$queryString || $nextPage}">{ $nextPage }</a>
+                      else ()
+                  }
+                  >>
+                  <a href="{$queryString || $page/@xmax}">{ string($page/@max) }</a>
+                </span>
+              </p>
+              <table>
                 <tr>
-                  <td class="lineid">{ string($line/@id) }</td>
-                  <td>
-                    {
-                      if ( $line/l2 ) then
-                        <table>
-                          <tr>
-                            <td>
-                              <b title="{ string-join($line/l1/@*[not(name() = 'id')], ' – ') }">
-                                { xs:int(number($line/l1/@id)) }
-                              </b>
-                            </td>
-                            {
-                              for $w in $line/l1//word return
-                                <td>
-                                  {
-                                    attribute class {
-                                      if ( $line/l2//word[@order = $w/@order] = $w )
-                                        then "linegt"
-                                        else "lineip"
-                                    },
-                                    if ( $line/l2//word[@order = $w/@order] != $w )
-                                      then attribute title { ($w => string-to-codepoints()) ! trp-utils:dec-to-hex(.) => string-join('-') }
-                                      else (),
-                                    translate($w, '&#xFEFF;', '¥')
-                                  }
-                                </td>
-                            }
-                          </tr>
-                          <tr>
-                            <td>
-                              <b title="{ string-join($line/l2/@*[not(name() = 'id')], ' – ') }">
-                                { xs:int(number($line/l2/@id)) }
-                              </b>
-                            </td>
-                            {
-                              for $w in $line/l2//word return
-                                <td>
-                                  {
-                                    attribute class {
-                                      if ( $line/l1//word[@order = $w/@order] = $w )
-                                        then "linegt"
-                                        else "lineip"
-                                    },
-                                    attribute title {
-                                      ($w => string-to-codepoints()) ! trp-utils:dec-to-hex(.) => string-join('-')
-                                    },
-                                    translate($w, "&#xFEFF;", '¥')
-                                  }
-                                </td>
-                            }
-                          </tr>
-                        </table>
-                      else (
-                        attribute class { 'lineok' },
-                        attribute data-style { $line/@style },
-                        $line/node()
-                      )
-                    }
-                  </td>
+                  <th>Line ID</th>
+                  <th>Text</th>
                 </tr>
-            }
-          </table>
-        </div>
-      </div>
+                {
+                  for $line in $page/line return
+                    <tr>
+                      <td class="lineid">{ string($line/@id) }</td>
+                      <td>
+                        {
+                          if ( $line/l2 ) then
+                            <table>
+                              <tr>
+                                <td>
+                                  <b title="{ string-join($line/l1/@*[not(name() = 'id')], ' – ') }">
+                                    { xs:int(number($line/l1/@id)) }
+                                  </b>
+                                </td>
+                                {
+                                  for $w in $line/l1//word return
+                                    <td>
+                                      {
+                                        attribute class {
+                                          if ( $line/l2//word[@order = $w/@order] = $w )
+                                            then "linegt"
+                                            else "lineip"
+                                        },
+                                        if ( $line/l2//word[@order = $w/@order] != $w )
+                                          then attribute title { ($w => string-to-codepoints()) ! trp-utils:dec-to-hex(.) => string-join('-') }
+                                          else (),
+                                        translate($w, '&#xFEFF;', '¥')
+                                      }
+                                    </td>
+                                }
+                              </tr>
+                              <tr>
+                                <td>
+                                  <b title="{ string-join($line/l2/@*[not(name() = 'id')], ' – ') }">
+                                    { xs:int(number($line/l2/@id)) }
+                                  </b>
+                                </td>
+                                {
+                                  for $w in $line/l2//word return
+                                    <td>
+                                      {
+                                        attribute class {
+                                          if ( $line/l1//word[@order = $w/@order] = $w )
+                                            then "linegt"
+                                            else "lineip"
+                                        },
+                                        attribute title {
+                                          ($w => string-to-codepoints()) ! trp-utils:dec-to-hex(.) => string-join('-')
+                                        },
+                                        translate($w, "&#xFEFF;", '¥')
+                                      }
+                                    </td>
+                                }
+                              </tr>
+                            </table>
+                          else (
+                            attribute class { 'lineok' },
+                            attribute data-style { $line/@style },
+                            $line/node()
+                          )
+                        }
+                      </td>
+                    </tr>
+                }
+              </table>
+            </div>
+         </div>
   } catch * {
     util:parse-html($err:description)/*
   }
@@ -333,34 +332,57 @@ declare %private function trp-utils:compare ( $info as map() ) {
 
   return <page file="{$info?d1?fileName}" max="{ $info?max }" current="{ $info?page }">
     {
-      for-each-pair($d1//*:TextLine, $d2//*:TextLine,
-        function ( $a, $b ) {
-          let $style := analyze-string($a/@custom, 'textStyle \{(.+)\}')/*:match/*:group
-
-          return if ( $a/*:TextEquiv/*:Unicode = $b/*:TextEquiv/*:Unicode ) then
-            <line id="{$a/@id}" style="{$style}">{ $a/*:TextEquiv/*:Unicode/text() }</line>
-          else
-            <line id="{$a/@id}">
-              <l1 status="{$info?d1?status}" tool="{$info?d1?toolName}" id="{$info?d1?tsId}">
-                <text>{$a/*:TextEquiv/*:Unicode/text()}</text>
-                <words>{
-                  for $word at $pos in tokenize($a/*:TextEquiv/*:Unicode/text(), ' ') return
-                    <word order="{ $pos }">
-                      { $word }
-                    </word>
-                }</words></l1>
-              <l2 status="{$info?d2?status}" tool="{$info?d2?toolName}" id="{$info?d2?tsId}">
-                <text>{$b/*:TextEquiv/*:Unicode/text()}</text>
-                <words>{
-                  for $word at $pos in tokenize($b/*:TextEquiv/*:Unicode/text(), ' ') return
+      for $base in $d1//*:TextLine return
+        if ( not($d2//*:TextLine[@id = $base/@id]) ) then
+          <line id="{$base/@id}">
+            <l1 status="{$info?d1?status}" tool="{$info?d1?toolName}" id="{$info?d1?tsId}">
+              <text>{$base/*:TextEquiv/*:Unicode/text()}</text>
+              <words>
+                {
+                  for $word at $pos in tokenize($base/*:TextEquiv/*:Unicode/text(), ' ') return
                     <word order="{ $pos }">
                       { $word }
                     </word>
                 }</words>
+            </l1>
+            <l2 status="{$info?d2?status}" tool="{$info?d2?toolName}" id="{$info?d2?tsId}" />
+          </line>
+        else if ( $base/*:TextEquiv/*:Unicode = $d2//*:TextLine[@id = $base/@id]/*:TextEquiv/*:Unicode ) then
+          let $style := analyze-string($base/@custom, 'textStyle \{(.+)\}')/*:match/*:group
+          return <line id="{$base/@id}" style="{$style}">{ $base/*:TextEquiv/*:Unicode/text() }</line>
+        else
+          let $l1 := for $word at $pos in tokenize($base/*:TextEquiv/*:Unicode/text(), ' ') return
+                    <word order="{ $pos }">
+                      { $word }
+                    </word>
+            , $l2 := for $word at $pos in tokenize($d2//*:TextLine[@id = $base/@id]/*:TextEquiv/*:Unicode/text(), ' ') return
+                    <word order="{ $pos }">
+                      { $word }
+                    </word>
+             
+          (: detect shifts of one word :)
+          let $l1temp :=
+                <l>
+                  {
+                    for $w at $pos in $l1 return
+                        if ( $w != $l2[$pos] and $w = $l2[$pos + 1]) then ( <word />, $l1[position() ge $pos], <break /> )
+                        else $w
+                  }
+                </l>
+            , $l1s := for $word at $pos in $l1temp/* return
+                  if ( $word[self::break] or $word/preceding-sibling::break ) then ()
+                  else <word order="{$pos}">{ string($word) }</word>
+             
+          return
+            <line id="{$base/@id}">
+              <l1 status="{$info?d1?status}" tool="{$info?d1?toolName}" id="{$info?d1?tsId}">
+                <text>{$base/*:TextEquiv/*:Unicode/text()}</text>
+                <words>{ $l1s }</words></l1>
+              <l2 status="{$info?d2?status}" tool="{$info?d2?toolName}" id="{$info?d2?tsId}">
+                <text>{$d2//TextLine[@id = $base/@id]/*:TextEquiv/*:Unicode/text()}</text>
+                <words>{ $l2 }</words>
               </l2>
             </line>
-        } 
-      )
     }
   </page>
 };
