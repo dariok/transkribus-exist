@@ -57,6 +57,12 @@ window.addEventListener('DOMContentLoaded', function () {
     req.onload = () => {
       if ( req.status != 200 ) {
         document.getElementById('login-info').innerHTML = "Login failed";
+      } else if ( searchParams.get('document') != undefined && parseInt(searchParams.get('document')) != 'NaN' ) {
+        window.location.href = "compare.html?sessionId=" + req.response
+            + "&collection=" + searchParams.get('collection')
+            + "&document=" + searchParams.get('document')
+            + "&page=" + searchParams.get('page')
+            + "&transcriptNo=" + searchParams.get('transcriptNo');
       } else {
         let token = req.response;
         window.location.href = "collections.html?sessionId=" + token;
@@ -124,6 +130,10 @@ window.addEventListener('DOMContentLoaded', function () {
     mdReq.send();
     
     loadComparison(collection, documentId, page, sessionId, transcriptNo);
+    
+    const updatedUrl = new URL(window.location.href);
+    updatedUrl.searchParams.set('transcriptNo', transcriptNo);
+    window.history.pushState({}, '', updatedUrl);
     
     window.addEventListener('change', function ( event ) {
        if ( event.target.id == 'transcriptVersion') {
